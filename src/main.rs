@@ -1,4 +1,5 @@
 use rand::Rng;
+use std::io;
 
 type Coord = (isize, isize);
 
@@ -33,13 +34,33 @@ fn main() {
     for _ in 0..10 {
         planets.push(Planet {pos: random_pos()});
     }
-    let ship = Ship {
+    let mut ship = Ship {
         view_distance: 3, 
         pos: random_pos()};
-    println!("Your location is {:?}", ship.pos);
-    for p in planets {
-        if is_in_view(&ship, &p) {
-            println!("You can see a planet at position {:?}", p.pos);
+    let mut input = String::new();
+    while true {
+        println!("Your location is {:?}", ship.pos);
+        for p in planets.iter() {
+            if is_in_view(&ship, &p) {
+                println!("You can see a planet at position {:?}", p.pos);
+            }
+        }
+        println!("What would you like to do next? ");
+        input = String::from("");
+        io::stdin().read_line(&mut input).unwrap();
+        let args: Vec<_> = input.trim().split(' ').collect();
+        match args[0] {
+            "move" => {
+                match args[1] {
+                    "east" => ship.pos.0 += 1,
+                    "west" => ship.pos.0 -= 1,
+                    "north" => ship.pos.1 += 1,
+                    "south" => ship.pos.1 -= 1,
+                    _ => println!("invalid direction"),
+                }
+            },
+            "wait" => {},
+            _ => println!("invalid option"),
         }
     }
 }
