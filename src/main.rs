@@ -15,13 +15,19 @@ fn is_in_view(viewer: &Ship, obj: &Planet) -> bool {
     }
 }
 
+fn move_ship(ship: &mut Ship) {
+    ship.pos.0 += ship.vel.0;
+    ship.pos.1 += ship.vel.1;
+}
+
 fn random_pos() -> Coord {
-    (rand::thread_rng().gen_range(-10, 10), rand::thread_rng().gen_range(-10, 10))
+    (rand::thread_rng().gen_range(-100, 100), rand::thread_rng().gen_range(-100, 100))
 }
 
 #[derive(Debug, Clone)]
 struct Ship {
     pos: Coord,
+    vel: Coord,
     view_distance: isize,
 }
 #[derive(Debug, Clone)]
@@ -31,15 +37,18 @@ struct Planet {
 
 fn main() {
     let mut planets: Vec<Planet> = vec!();
-    for _ in 0..10 {
+    for _ in 0..30 {
         planets.push(Planet {pos: random_pos()});
     }
     let mut ship = Ship {
-        view_distance: 3, 
+        view_distance: 30, 
+        vel: (0, 0),
         pos: random_pos()};
     let mut input = String::new();
     while true {
+        move_ship(&mut ship);
         println!("Your location is {:?}", ship.pos);
+        println!("Your velocity is {:?}", ship.vel);
         for p in planets.iter() {
             if is_in_view(&ship, &p) {
                 println!("You can see a planet at position {:?}", p.pos);
@@ -50,12 +59,12 @@ fn main() {
         io::stdin().read_line(&mut input).unwrap();
         let args: Vec<_> = input.trim().split(' ').collect();
         match args[0] {
-            "move" => {
+            "burn" => {
                 match args[1] {
-                    "east" => ship.pos.0 += 1,
-                    "west" => ship.pos.0 -= 1,
-                    "north" => ship.pos.1 += 1,
-                    "south" => ship.pos.1 -= 1,
+                    "east" | "e" => ship.vel.0 += 1,
+                    "west" | "w" => ship.vel.0 -= 1,
+                    "north" | "n" => ship.vel.1 += 1,
+                    "south" | "s" => ship.vel.1 -= 1,
                     _ => println!("invalid direction"),
                 }
             },
