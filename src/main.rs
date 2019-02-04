@@ -20,13 +20,9 @@ struct Planet {
 }
 
 fn is_within(pos: &Coord, pos2: &Coord, range: isize) -> bool {
-    if  (pos.0 > pos2.0-range) & 
-        (pos.0 < pos2.0+range) &
-        (pos.1 > pos2.1-range) &
-        (pos.1 < pos2.1+range) &
-        (pos.2 > pos2.2-range) &
-        (pos.2 < pos2.2+range) {
-            true
+    let d = ((pos.0 - pos2.0).pow(2) + (pos.1 - pos2.1).pow(2) + (pos.2 - pos2.2).pow(2)) as f64;
+    if d.sqrt() < range as f64 {
+        true
     }
     else {
         false
