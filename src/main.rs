@@ -81,7 +81,7 @@ fn main() {
             match args[0] {
                 "burn" => {
                     if ship.landed {
-                        println!("You need to unland first!");
+                        println!("You need to launch first!");
                     }
                     else if ship.fuel < 1 {
                         println!("Out of fuel!");
@@ -122,7 +122,7 @@ fn main() {
                         }
                     }
                 },
-                "unland" => {
+                "launch" => {
                     if ship.landed {
                         if ship.fuel < 1 {
                             println!("Not enough fuel!");
