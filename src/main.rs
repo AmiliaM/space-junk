@@ -11,6 +11,9 @@ struct Ship {
     view_distance: isize,
     food: isize,
     fuel: isize,
+    metal: isize,
+    food_consumption: isize,
+    fuel_consumption: isize,
     landed: bool,
 }
 
@@ -22,6 +25,13 @@ struct Planet {
 #[derive(Debug, Clone)]
 struct Asteroid {
     remaining_resources: isize,
+    resource: Resource,
+}
+
+#[derive(Debug, Clone)]
+enum Resource {
+    Metal,
+    Fuel,
 }
 
 #[derive(Debug, Clone)]
@@ -88,7 +98,13 @@ fn main() {
         if b {
             objects.insert(
                 r, 
-                Object::Asteroid(Asteroid {remaining_resources: 3})
+                Object::Asteroid(Asteroid {
+                    remaining_resources: 3,
+                    resource: match rand::thread_rng().gen_bool(0.5) {
+                        true => Resource::Fuel,
+                        false => Resource::Metal,
+                    }
+                })
             );
         }
     }
@@ -96,8 +112,11 @@ fn main() {
         view_distance: 30, 
         vel: (0, 0, 0),
         pos: random_pos(50),
-        food: 25,
-        fuel: 10,
+        food: 70,
+        fuel: 40,
+        metal: 24,
+        fuel_consumption: 2,
+        food_consumption: 2,
         landed: false,
     };
     let mut input: String;
@@ -137,32 +156,32 @@ fn main() {
                         match args[1] {
                             "east" | "e" => {
                                 ship.vel.0 += 1;
-                                ship.fuel -= 1;
+                                ship.fuel -= ship.fuel_consumption;
                                 break;
                             },
                             "west" | "w" => {
                                 ship.vel.0 -= 1;
-                                ship.fuel -= 1;
+                                ship.fuel -= ship.fuel_consumption;
                                 break;
                             },
                             "north" | "n" => {
                                 ship.vel.1 += 1;
-                                ship.fuel -= 1;
+                                ship.fuel -= ship.fuel_consumption;
                                 break;
                             },
                             "south" | "s" => {
                                 ship.vel.1 -= 1;
-                                ship.fuel -= 1;
+                                ship.fuel -= ship.fuel_consumption;
                                 break;
                             },
                             "up" | "u" => {
                                 ship.vel.2 += 1;
-                                ship.fuel -= 1;
+                                ship.fuel -= ship.fuel_consumption;
                                 break;
                             },
                             "down" | "d" => {
                                 ship.vel.2 -= 1;
-                                ship.fuel -= 1;
+                                ship.fuel -= ship.fuel_consumption;
                                 break;
                             },
                             _ => println!("invalid direction"),
@@ -224,7 +243,10 @@ fn main() {
                             Object::Asteroid(ref mut a) => {
                                 if a.remaining_resources > 0 {
                                     a.remaining_resources -= 1;
-                                    ship.fuel += 4;
+                                    match a.resource {
+                                        Resource::Fuel => ship.fuel += 4,
+                                        Resource::Metal => ship.metal += 2,
+                                    }
                                     println!("There are {} resources remaining", a.remaining_resources);
                                 }
                                 else {
@@ -239,10 +261,21 @@ fn main() {
                     }
                 },
                 "wait" => break,
+                "upgrade" => {
+                    if ship.metal >= 24 {
+                        ship.food_consumption -= 1;
+                        ship.fuel_consumption -= 1;
+                        ship.metal -= 24;
+                        break;
+                    }
+                    else {
+                        println!("Not enough metal!");
+                    }
+                },
                 _ => println!("invalid option"),
             }
         }
-        ship.food -= 1;
+        ship.food -= ship.food_consumption;
         if ship.food < 0 {
             game_over("Starvation");
             return;
