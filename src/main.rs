@@ -12,6 +12,7 @@ struct Ship {
     food: isize,
     fuel: isize,
     metal: isize,
+    crew: isize,
     food_consumption: isize,
     fuel_consumption: isize,
     landed: bool,
@@ -112,15 +113,15 @@ fn main() {
         view_distance: 30, 
         vel: (0, 0, 0),
         pos: random_pos(50),
-        food: 70,
-        fuel: 40,
-        metal: 24,
+        food: 210,
+        fuel: 50,
+        metal: 9,
+        crew: 3,
         fuel_consumption: 2,
         food_consumption: 2,
         landed: false,
     };
     let mut input: String;
-    println!("{:?}", objects);
     loop {
         println!("");
         println!("Your location is {:?}", ship.pos);
@@ -130,6 +131,7 @@ fn main() {
         }
         println!("You have {} food", ship.food);
         println!("You have {} fuel", ship.fuel);
+        println!("You have {} crew", ship.crew);
         for (c, o) in objects.iter() {
             if is_within(&c, &ship.pos, ship.view_distance) {
                 match o {
@@ -233,7 +235,7 @@ fn main() {
                             Object::Planet(ref mut p) => {
                                 if p.remaining_resources > 0 {
                                     p.remaining_resources -= 1;
-                                    ship.food += 4;
+                                    ship.food += ship.crew;
                                     println!("There are {} resources remaining", p.remaining_resources);
                                 }
                                 else {
@@ -244,8 +246,8 @@ fn main() {
                                 if a.remaining_resources > 0 {
                                     a.remaining_resources -= 1;
                                     match a.resource {
-                                        Resource::Fuel => ship.fuel += 4,
-                                        Resource::Metal => ship.metal += 2,
+                                        Resource::Fuel => ship.fuel += ship.crew,
+                                        Resource::Metal => ship.metal += ship.crew,
                                     }
                                     println!("There are {} resources remaining", a.remaining_resources);
                                 }
@@ -261,11 +263,16 @@ fn main() {
                     }
                 },
                 "wait" => break,
+                "airlock" => {
+                    println!("You throw one of the crew out of the airlock!");
+                    ship.crew -= 1;
+                    break;
+                }
                 "upgrade" => {
-                    if ship.metal >= 24 {
+                    if ship.metal >= 18 {
                         ship.food_consumption -= 1;
                         ship.fuel_consumption -= 1;
-                        ship.metal -= 24;
+                        ship.metal -= 18;
                         break;
                     }
                     else {
@@ -275,7 +282,11 @@ fn main() {
                 _ => println!("invalid option"),
             }
         }
-        ship.food -= ship.food_consumption;
+        if rand::thread_rng().gen_range(1, 50) == 1 {
+            ship.crew -= 1;
+            println!("One of the crew has died in an accident!");
+        }
+        ship.food -= ship.food_consumption * ship.crew;
         if ship.food < 0 {
             game_over("Starvation");
             return;
