@@ -1,6 +1,7 @@
 use rand::Rng;
 use std::io;
 use std::collections::HashMap;
+use ansi_term::Color::*;
 
 type Coord = (isize, isize, isize);
 
@@ -65,8 +66,8 @@ fn random_pos(x: isize) -> Coord {
 }
 
 fn game_over(reason: &str) {
-    println!("You lose!");
-    println!("Cause of failure: {}", reason);
+    let m = String::from("You lose!\n") + "Cause of failure: " + reason;
+    println!("{}", Red.normal().paint(m));
 }
 
 fn main() {
@@ -121,25 +122,34 @@ fn main() {
         food_consumption: 2,
         landed: false,
     };
+    println!("Controls:");
+    println!("burn (N/S/E/W/U/D)");
+    println!("land/launch");
+    println!("mine");
+    println!("upgrade");
+    println!("wait");
     let mut input: String;
     loop {
         println!("");
-        println!("Your location is {:?}", ship.pos);
-        println!("Your velocity is {:?}", ship.vel);
+        println!("                       (E/W, N/S, U/D)");
+        println!("Your location is       {:<3?}", ship.pos);
+        println!("Your velocity is       {:<3?}", ship.vel);
+        for (c, o) in objects.iter() {
+            if is_within(&c, &ship.pos, ship.view_distance) {
+                match o {
+                    Object::Planet(_) => println!("You see a planet at    {:<3?}", c),
+                    Object::Asteroid(_) => println!("You see an asteroid at {:<3?}", c),
+                }
+            }
+        }
         if ship.landed {
             println!("You are landed");
         }
         println!("You have {} food", ship.food);
         println!("You have {} fuel", ship.fuel);
         println!("You have {} crew", ship.crew);
-        for (c, o) in objects.iter() {
-            if is_within(&c, &ship.pos, ship.view_distance) {
-                match o {
-                    Object::Planet(_) => println!("You can see a planet at position {:?}", c),
-                    Object::Asteroid(_) => println!("You can see an asteroid at position {:?}", c),
-                }
-            }
-        }
+        println!("You have {} metal", ship.metal);
+        
         loop {
             println!("What would you like to do next? ");
             input = String::from("");
@@ -149,10 +159,12 @@ fn main() {
             match args[0] {
                 "burn" => {
                     if ship.landed {
-                        println!("You need to launch first!");
+                        let m = "You need to launch first!";
+                        println!("{}", Red.normal().paint(m));
                     }
                     else if ship.fuel < 1 {
-                        println!("Out of fuel!");
+                        let m = "Out of fuel!";
+                        println!("{}", Red.normal().paint(m));
                     }
                     else {
                         match args[1] {
@@ -193,7 +205,8 @@ fn main() {
                 "launch" => {
                     if ship.landed {
                         if ship.fuel < 1 {
-                            println!("Not enough fuel!");
+                            let m = "Out of fuel!";
+                            println!("{}", Red.normal().paint(m));
                         }
                         else {
                             ship.fuel -= 1;
@@ -202,7 +215,8 @@ fn main() {
                         }
                     }
                     else {
-                        println!("You are not landed!");
+                       let m = "You are not landed!";
+                        println!("{}", Red.normal().paint(m));
                     }
                 },
                 "land" => {
@@ -212,21 +226,25 @@ fn main() {
                     else if objects.contains_key(&ship.pos) {
                         if (ship.vel.0 == 0) & (ship.vel.1 == 0) & (ship.vel.2 == 0) {
                             if ship.fuel < 1 {
-                                println!("Not enough fuel!");
+                                let m = "Out of fuel!";
+                                println!("{}", Red.normal().paint(m));
                             }
                             else {
                                 ship.landed = true;
                                 ship.fuel -= 1;
-                                println!("You have landed");
+                                let m = "You have landed";
+                                println!("{}", Green.normal().paint(m));
                                 break;
                             }
                         }
                         else {
-                            println!("You are moving too quickly to land!");
+                            let m = "You are moving too quickly to land!";
+                            println!("{}", Red.normal().paint(m));
                         }
                     }
                     else {
-                        println!("You can not land here!");
+                        let m = "You can not land here!";
+                        println!("{}", Red.normal().paint(m));
                     }
                 },
                 "mine" => {
@@ -239,7 +257,8 @@ fn main() {
                                     println!("There are {} resources remaining", p.remaining_resources);
                                 }
                                 else {
-                                    println!("Nothing left to mine");
+                                    let m = "Nothing left to mine";
+                                    println!("{}", Red.normal().paint(m));
                                 }
                             },
                             Object::Asteroid(ref mut a) => {
@@ -252,19 +271,22 @@ fn main() {
                                     println!("There are {} resources remaining", a.remaining_resources);
                                 }
                                 else {
-                                    println!("Nothing left to mine");
+                                    let m = "Nothing left to mine";
+                                    println!("{}", Red.normal().paint(m));
                                 }
                             }
                         });
                         break;
                     }
                     else {
-                        println!("You need to land first!");
+                        let m = "You need to land first!";
+                        println!("{}", Red.normal().paint(m));
                     }
                 },
                 "wait" => break,
                 "airlock" => {
-                    println!("You throw one of the crew out of the airlock!");
+                    let m = "You throw one of the crew out of the airlock!";
+                    println!("{}", Red.normal().paint(m));
                     ship.crew -= 1;
                     break;
                 }
@@ -276,19 +298,28 @@ fn main() {
                         break;
                     }
                     else {
-                        println!("Not enough metal!");
+                        let m = "Not enough metal!";
+                        println!("{}", Red.normal().paint(m));
                     }
                 },
-                _ => println!("invalid option"),
+                _ => {
+                    let m = "Invalid option";
+                    println!("{}", Red.normal().paint(m));
+                },
             }
         }
         if rand::thread_rng().gen_range(1, 50) == 1 {
             ship.crew -= 1;
-            println!("One of the crew has died in an accident!");
+            let m = "One of the crew has died in an accident!";
+            println!("{}", Red.normal().paint(m));
         }
         ship.food -= ship.food_consumption * ship.crew;
         if ship.food < 0 {
             game_over("Starvation");
+            return;
+        }
+        if ship.crew < 1 {
+            game_over("All crew are dead");
             return;
         }
         move_ship(&mut ship);
