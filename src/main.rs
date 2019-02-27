@@ -1,7 +1,7 @@
-use rand::Rng;
-use std::io;
-use std::collections::HashMap;
 use ansi_term::Color::*;
+use rand::Rng;
+use std::collections::HashMap;
+use std::io;
 
 type Coord = (isize, isize, isize);
 
@@ -39,16 +39,14 @@ enum Resource {
 #[derive(Debug, Clone)]
 enum Object {
     Planet(Planet),
-    Asteroid(Asteroid)
+    Asteroid(Asteroid),
 }
-
 
 fn is_within(pos: &Coord, pos2: &Coord, range: isize) -> bool {
     let d = ((pos.0 - pos2.0).pow(2) + (pos.1 - pos2.1).pow(2) + (pos.2 - pos2.2).pow(2)) as f64;
     if d.sqrt() < range as f64 {
         true
-    }
-    else {
+    } else {
         false
     }
 }
@@ -60,9 +58,11 @@ fn move_ship(ship: &mut Ship) {
 }
 
 fn random_pos(x: isize) -> Coord {
-    (rand::thread_rng().gen_range(-x, x), 
-    rand::thread_rng().gen_range(-x, x), 
-    rand::thread_rng().gen_range(-x, x))
+    (
+        rand::thread_rng().gen_range(-x, x),
+        rand::thread_rng().gen_range(-x, x),
+        rand::thread_rng().gen_range(-x, x),
+    )
 }
 
 fn game_over(reason: &str) {
@@ -83,8 +83,10 @@ fn main() {
         }
         if b {
             objects.insert(
-                r, 
-                Object::Planet(Planet {remaining_resources: 3})
+                r,
+                Object::Planet(Planet {
+                    remaining_resources: 3,
+                }),
             );
         }
     }
@@ -99,19 +101,19 @@ fn main() {
         }
         if b {
             objects.insert(
-                r, 
+                r,
                 Object::Asteroid(Asteroid {
                     remaining_resources: 3,
                     resource: match rand::thread_rng().gen_bool(0.5) {
                         true => Resource::Fuel,
                         false => Resource::Metal,
-                    }
-                })
+                    },
+                }),
             );
         }
     }
     let mut ship = Ship {
-        view_distance: 30, 
+        view_distance: 30,
         vel: (0, 0, 0),
         pos: random_pos(50),
         food: 210,
@@ -149,7 +151,7 @@ fn main() {
         println!("You have {} fuel", ship.fuel);
         println!("You have {} crew", ship.crew);
         println!("You have {} metal", ship.metal);
-        
+
         loop {
             println!("What would you like to do next? ");
             input = String::from("");
@@ -161,92 +163,84 @@ fn main() {
                     if ship.landed {
                         let m = "You need to launch first!";
                         println!("{}", Red.normal().paint(m));
-                    }
-                    else if ship.fuel < 1 {
+                    } else if ship.fuel < 1 {
                         let m = "Out of fuel!";
                         println!("{}", Red.normal().paint(m));
-                    }
-                    else {
+                    } else {
                         match args[1] {
                             "east" | "e" => {
                                 ship.vel.0 += 1;
                                 ship.fuel -= ship.fuel_consumption;
                                 break;
-                            },
+                            }
                             "west" | "w" => {
                                 ship.vel.0 -= 1;
                                 ship.fuel -= ship.fuel_consumption;
                                 break;
-                            },
+                            }
                             "north" | "n" => {
                                 ship.vel.1 += 1;
                                 ship.fuel -= ship.fuel_consumption;
                                 break;
-                            },
+                            }
                             "south" | "s" => {
                                 ship.vel.1 -= 1;
                                 ship.fuel -= ship.fuel_consumption;
                                 break;
-                            },
+                            }
                             "up" | "u" => {
                                 ship.vel.2 += 1;
                                 ship.fuel -= ship.fuel_consumption;
                                 break;
-                            },
+                            }
                             "down" | "d" => {
                                 ship.vel.2 -= 1;
                                 ship.fuel -= ship.fuel_consumption;
                                 break;
-                            },
+                            }
                             _ => println!("invalid direction"),
                         }
                     }
-                },
+                }
                 "launch" => {
                     if ship.landed {
                         if ship.fuel < 1 {
                             let m = "Out of fuel!";
                             println!("{}", Red.normal().paint(m));
-                        }
-                        else {
+                        } else {
                             ship.fuel -= 1;
                             ship.landed = false;
                             break;
                         }
-                    }
-                    else {
-                       let m = "You are not landed!";
+                    } else {
+                        let m = "You are not landed!";
                         println!("{}", Red.normal().paint(m));
                     }
-                },
+                }
                 "land" => {
                     if ship.landed {
                         println!("You are already landed!");
-                    }
-                    else if objects.contains_key(&ship.pos) {
+                    } else if objects.contains_key(&ship.pos) {
                         if (ship.vel.0 == 0) & (ship.vel.1 == 0) & (ship.vel.2 == 0) {
                             if ship.fuel < 1 {
                                 let m = "Out of fuel!";
                                 println!("{}", Red.normal().paint(m));
-                            }
-                            else {
+                            } else {
                                 ship.landed = true;
                                 ship.fuel -= 1;
                                 let m = "You have landed";
                                 println!("{}", Green.normal().paint(m));
                                 break;
                             }
-                        }
-                        else {
+                        } else {
                             let m = "You are moving too quickly to land!";
                             println!("{}", Red.normal().paint(m));
                         }
-                    }
-                    else {
+                    } else {
                         let m = "You can not land here!";
                         println!("{}", Red.normal().paint(m));
                     }
-                },
+                }
                 "mine" => {
                     if ship.landed {
                         objects.entry(ship.pos).and_modify(|object| match object {
@@ -254,13 +248,15 @@ fn main() {
                                 if p.remaining_resources > 0 {
                                     p.remaining_resources -= 1;
                                     ship.food += ship.crew;
-                                    println!("There are {} resources remaining", p.remaining_resources);
-                                }
-                                else {
+                                    println!(
+                                        "There are {} resources remaining",
+                                        p.remaining_resources
+                                    );
+                                } else {
                                     let m = "Nothing left to mine";
                                     println!("{}", Red.normal().paint(m));
                                 }
-                            },
+                            }
                             Object::Asteroid(ref mut a) => {
                                 if a.remaining_resources > 0 {
                                     a.remaining_resources -= 1;
@@ -268,21 +264,22 @@ fn main() {
                                         Resource::Fuel => ship.fuel += ship.crew,
                                         Resource::Metal => ship.metal += ship.crew,
                                     }
-                                    println!("There are {} resources remaining", a.remaining_resources);
-                                }
-                                else {
+                                    println!(
+                                        "There are {} resources remaining",
+                                        a.remaining_resources
+                                    );
+                                } else {
                                     let m = "Nothing left to mine";
                                     println!("{}", Red.normal().paint(m));
                                 }
                             }
                         });
                         break;
-                    }
-                    else {
+                    } else {
                         let m = "You need to land first!";
                         println!("{}", Red.normal().paint(m));
                     }
-                },
+                }
                 "wait" => break,
                 "airlock" => {
                     let m = "You throw one of the crew out of the airlock!";
@@ -296,16 +293,15 @@ fn main() {
                         ship.fuel_consumption -= 1;
                         ship.metal -= 18;
                         break;
-                    }
-                    else {
+                    } else {
                         let m = "Not enough metal!";
                         println!("{}", Red.normal().paint(m));
                     }
-                },
+                }
                 _ => {
                     let m = "Invalid option";
                     println!("{}", Red.normal().paint(m));
-                },
+                }
             }
         }
         if rand::thread_rng().gen_range(1, 50) == 1 {
